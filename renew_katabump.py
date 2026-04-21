@@ -106,7 +106,7 @@ class KatabumpAutoRenew:
         logger.info(f"🛠️ 驱动初始化 - 指定大版本: {v_main or '自动探测'}")
         for v in [v_main, None]: # 先试指定版本，后试自动探测
             try:
-                self.driver = uc.Chrome(options=opts, headless=HEADLESS, version_main=v, use_subprocess=True)
+                self.driver = uc.Chrome(options=chrome_options, headless=HEADLESS, version_main=v, use_subprocess=True)
                 return self.driver.set_window_size(1280, 720)
             except Exception as e:
                 if getattr(self, 'driver', None): self.driver.quit(); self.driver = None
