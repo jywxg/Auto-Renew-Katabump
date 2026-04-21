@@ -182,7 +182,50 @@ class KatabumpAutoRenew:
         sleep(1000 + random.random() * 1000)
         self.driver.execute_script("arguments[0].click();", manage_btn)
         human_delay()
-
+ # =========== 🔹 新增：检查续期日期逻辑 🔹 ===========
+        logger.info(f"📅 {self.masked_user} - 检查是否到达续期日期...")
+        try:
+            # 定位 Expiry 日期元素（匹配你提供的 HTML 结构）
+            expiry_element = WebDriverWait(self.driver, 15).until(
+                EC.presence_of_element_located((By.XPATH, "//div[contains(text(), 'Expiry')]/following-sibling::div"))
+            )
+            expiry_text = expiry_element.text.strip()
+            logger.info(f"⌛ {self.masked_user} - 页面显示到期时间: {expiry_text}")
+            
+            # 解析日期（支持多种常见格式）
+            from datetime import datetime, timezone, timedelta
+            tz_hkt = timezone(timedelta(hours=8))  # 香港时间
+            today = datetime.now(tz_hkt).date()
+            
+            expiry_date = None
+            # 尝试解析不同日期格式
+            for fmt in ["%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%d/%m/%Y", "%Y年%m月%d日"]:
+                try:
+                    expiry_date = datetime.strptime(expiry_text, fmt).date()
+                    break
+                except ValueError:
+                    continue
+            
+            # 如果无法解析日期，记录警告但继续执行（避免误杀）
+            if expiry_date is None:
+                logger.warning(f"⚠️ {self.masked_user} - 无法解析日期格式 '{expiry_text}'，继续执行续期流程")
+            # 如果到期日不是今天，跳过续期并发送通知
+            elif expiry_date != today:
+                days_diff = (expiry_date - today).days
+                if days_diff > 0:
+                    notice = f"⏰ {self.masked_user}\n📅 未到续期时间，到期日: {expiry_text}\n🔄 剩余 {days_diff} 天"
+                else:
+                    notice = f"⚠️ {self.masked_user}\n📅 日期异常，到期日: {expiry_text} (已过 {abs(days_diff)} 天)"
+                
+                logger.info(f"ℹ️ {self.masked_user} - {notice}")
+                # 返回 True 表示"正常跳过"，避免触发重试机制
+                return True, notice
+            
+            logger.info(f"✅ {self.masked_user} - 今天是续期日 ({expiry_text})，继续执行续期流程")
+            
+        except Exception as e:
+            logger.warning(f"⚠️ {self.masked_user} - 检查续期日期时异常: {e}，继续执行续期流程")
+        # =========== 🔹 新增逻辑结束 🔹 ===========
         # --- 第四步： Renew Server ---
         logger.info(f"🔄 {self.masked_user} - 准备续期流程...")
         initial_expiry = ""
