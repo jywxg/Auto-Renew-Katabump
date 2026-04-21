@@ -29,7 +29,6 @@ jobs:
           sudo apt-get update && sudo apt-get install -y xvfb
           
       - name: Get Chromium Version
-        if: steps.check.outputs.run == 'true'
         id: get_version
         run: |
           CHROME_VERSION=$(chromium-browser --version 2>/dev/null | grep -oE 'Chromium\s[0-9]+' | grep -oE '[0-9]+')
