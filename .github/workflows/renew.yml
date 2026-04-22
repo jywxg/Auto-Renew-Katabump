@@ -9,7 +9,7 @@ jobs:
    pre-check:
     runs-on: ubuntu-latest
     outputs:
-      should_skip: ${{ steps.check.outputs.EARLY_EXIT }}  # 映射步骤输出到 Job 输出
+      should_skip: ${{ steps.check.outputs.should_skip }} 
     steps:
       - name: Interval Check (Strict 4-day cycle)
         id: check
