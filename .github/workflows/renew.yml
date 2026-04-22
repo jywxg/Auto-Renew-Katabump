@@ -24,10 +24,12 @@ jobs:
           DAYS=$(( $(date -u +%s) / 86400 ))
           REMAINDER=$(( $DAYS % 4 ))
           
-          if [ $REMAINDER -eq 0 ]; then
-            echo "EARLY_EXIT=true" >> $GITHUB_OUTPUT
+          if [ $REMAINDER -ne 0 ]; then
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
           fi
-  auto_renew_katabump:
+   auto_renew_katabump:
     needs: pre-check
     if: needs.pre-check.outputs.should_skip != 'true'
     runs-on: ubuntu-22.04
